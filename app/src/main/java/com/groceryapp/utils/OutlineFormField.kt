@@ -34,7 +34,7 @@ fun OutlineFormField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
-    horizontalPadding : Dp = 0.dp,
+    horizontalPadding : Dp = 01.dp,
     verticalPadding : Dp = 3.dp,
     colors : TextFieldColors? = null,
     label : @Composable (() -> Unit)? = null,
