@@ -30,23 +30,29 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.groceryapp.R
 import com.groceryapp.routing.Screen
+import com.groceryapp.ui.grocery_database.GroceryDatabase
 import com.groceryapp.ui.theme.GroceryAppTheme
 import com.groceryapp.utils.OutlineFormField
 import com.groceryapp.utils.RoundedButton
+import com.groceryapp.utils.isValidEmail
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SignUpScreen(navController: NavController) {
     val context = LocalContext.current
+    val preferenceManager = remember {
+        GroceryDatabase(context)
+    }
     var name by remember { mutableStateOf("") }
-    var mobileNumber by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val db = Firebase.firestore
+    val firebaseAuth = FirebaseAuth.getInstance()
     GroceryAppTheme {
         Scaffold {
             Box(
@@ -117,12 +123,12 @@ fun SignUpScreen(navController: NavController) {
 
                             Spacer(Modifier.height(10.dp))
                             OutlineFormField(
-                                value = mobileNumber,
+                                value = email,
                                 onValueChange = { text ->
-                                    mobileNumber = text
+                                    email = text
                                 },
-                                placeholder = "Enter Mobile Number",
-                                keyboardType = KeyboardType.Phone,
+                                placeholder = "Enter email",
+                                keyboardType = KeyboardType.Email,
                             )
 
                             Spacer(Modifier.height(10.dp))
@@ -152,88 +158,50 @@ fun SignUpScreen(navController: NavController) {
                             text = "Register",
                             onClick = {
                                 if (name.isNotEmpty()) {
-                                    if (mobileNumber.isNotEmpty()) {
-                                        if (password.isNotEmpty()) {
-                                            val user = hashMapOf(
-                                                "name" to name,
-                                                "email" to mobileNumber,
-                                                "password" to password
-                                            )
-                                            db.collection("users")
-                                                .get()
-                                                .addOnSuccessListener { result ->
-                                                    if (result.isEmpty) {
-                                                        db.collection("users")
-                                                            .add(user)
-                                                            .addOnSuccessListener { documentReference ->
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    "Register successfully.",
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()
-                                                                navController.navigate(
-                                                                    Screen.MainScreen.route
-                                                                ) {
-                                                                    popUpTo(Screen.LoginScreen.route) {
-                                                                        inclusive = true
-                                                                    }
+                                    if (email.isNotEmpty()) {
+                                        if (!isValidEmail(email.trim())) {
+                                            if (password.isNotEmpty()) {
+                                                firebaseAuth.createUserWithEmailAndPassword(
+                                                    email.lowercase(),
+                                                    password
+                                                )
+                                                    .addOnCompleteListener { task ->
+                                                        if (task.isSuccessful) {
+                                                            preferenceManager.saveData(
+                                                                "isLogin", true
+                                                            )
+                                                            Toast.makeText(
+                                                                context,
+                                                                "Register successfully.",
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
+                                                            navController.navigate(
+                                                                Screen.MainScreen.route
+                                                            ) {
+                                                                popUpTo(Screen.RegisterScreen.route) {
+                                                                    inclusive = true
                                                                 }
                                                             }
-                                                            .addOnFailureListener { e ->
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    e.message.toString(),
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()
-                                                            }
-                                                    } else {
-                                                        for (document in result) {
-                                                            if (document.data["email"] == mobileNumber &&
-                                                                document.data["password"] == password
-                                                            ) {
-                                                                Toast.makeText(
-                                                                    context,
-                                                                    "Already exists.",
-                                                                    Toast.LENGTH_SHORT
-                                                                ).show()
-                                                                return@addOnSuccessListener
-                                                            } else {
-                                                                db.collection("users")
-                                                                    .add(user)
-                                                                    .addOnSuccessListener { documentReference ->
-                                                                        Toast.makeText(
-                                                                            context,
-                                                                            "Register successfully.",
-                                                                            Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                        navController.navigate(Screen.MainScreen.route) {
-                                                                            popUpTo(Screen.RegisterScreen.route) {
-                                                                                inclusive = true
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    .addOnFailureListener { e ->
-                                                                        Toast.makeText(
-                                                                            context,
-                                                                            e.message.toString(),
-                                                                            Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                    }
-                                                            }
+                                                        } else {
+                                                            Toast.makeText(
+                                                                context,
+                                                                task.exception?.message.toString(),
+                                                                Toast.LENGTH_SHORT
+                                                            ).show()
                                                         }
                                                     }
-                                                }
-                                                .addOnFailureListener { exception ->
-                                                    Toast.makeText(
-                                                        context,
-                                                        exception.message.toString(),
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Please enter password.",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+
+                                            }
                                         } else {
                                             Toast.makeText(
                                                 context,
-                                                "Please enter password.",
+                                                "Please enter valid email.",
                                                 Toast.LENGTH_LONG
                                             ).show()
 

@@ -1,12 +1,10 @@
 package com.groceryapp.ui.detail
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.widget.Toast
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.*
@@ -16,23 +14,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.groceryapp.R
+import com.groceryapp.application.AppConfig
+import com.groceryapp.ui.model.CartModel
 import com.groceryapp.ui.theme.GroceryAppTheme
 import com.groceryapp.ui.theme.orange
 import com.groceryapp.ui.theme.white
+import com.groceryapp.utils.RoundedButton
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DetailScreen(navController: NavController) {
+fun DetailScreen(navController: NavController,name:String,image:Int,price:String,detail:String) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
+    var quantity by remember { mutableStateOf(0) }
+    var isAdded by remember { mutableStateOf(false) }
     GroceryAppTheme {
         Scaffold {
             Column(
@@ -68,7 +73,9 @@ fun DetailScreen(navController: NavController) {
                     )
                 )
 
-                Column(modifier = Modifier.background(color = white)) {
+                Column(modifier = Modifier
+                    .fillMaxSize()
+                    .background(color = white)) {
                     Card(
                         modifier = Modifier
                             .padding(10.dp)
@@ -79,7 +86,7 @@ fun DetailScreen(navController: NavController) {
                         elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_grocery),
+                            painter = painterResource(id = image),
                             contentDescription = "Image",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -88,14 +95,14 @@ fun DetailScreen(navController: NavController) {
                         )
                     }
                     Text(
-                        "Test Product",
+                        name,
                         fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier
                             .padding(vertical = 5.dp, horizontal = 10.dp)
                     )
                     Text(
-                        "140.00",
+                        price,
                         fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier
@@ -110,13 +117,94 @@ fun DetailScreen(navController: NavController) {
                             .padding(vertical = 5.dp, horizontal = 10.dp)
                     )
                     Text(
-                        "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry\\'s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                        detail,
                         fontSize = 14.sp,
                         color = Color.Black,
                         modifier = Modifier
                             .padding(vertical = 5.dp, horizontal = 10.dp)
                     )
+
+                    Row(
+                        modifier = Modifier
+                            .padding(10.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.minus),
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(36.dp)
+                                .border(BorderStroke(1.dp, colorResource(id = R.color.black)))
+                                .padding(5.dp)
+                                .clickable {
+                                    if (quantity > 0) {
+                                        quantity--
+                                    } else {
+                                        quantity = 0
+                                    }
+
+                                },
+                            contentDescription = "Expandable Image"
+                        )
+                        Text(
+                            "$quantity",
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            modifier = Modifier
+                                .padding(vertical = 5.dp, horizontal = 10.dp)
+                        )
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_add_24),
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(36.dp)
+                                .border(BorderStroke(1.dp, colorResource(id = R.color.black)))
+                                .padding(5.dp)
+                                .clickable {
+                                    quantity++
+                                },
+                            contentDescription = "Expandable Image"
+                        )
+                    }
+                    Row(
+                        modifier = Modifier
+                            .padding(10.dp)
+                    ) {
+                        RoundedButton(
+                            text = "Add to Cart",
+                            onClick = {
+                                val productPrice = price.toInt()
+                                val total = productPrice*quantity
+                                if (quantity>0) {
+                                    AppConfig.cartList.add(CartModel(image = image, name = name, price = total.toString(), cartCount = quantity.toString()))
+                                    quantity = 0
+                                    isAdded = true
+                                }else{
+                                    Toast.makeText(context, "Please increase quantity.", Toast.LENGTH_SHORT).show()
+                                }
+
+                            }
+                        )
+                    }
                 }
+            }
+            if (isAdded) {
+                AlertDialog(
+                    onDismissRequest = {
+                        isAdded = false
+                    },
+                    title = { Text(stringResource(id = R.string.app_name)) },
+                    text = { Text("Product Added Successfully.") },
+                    confirmButton = {
+                        RoundedButton(
+                            text = "OK",
+                            textColor = white,
+                            onClick = {
+                                isAdded = false
+                            }
+                        )
+                    },
+                    dismissButton = {}
+                )
             }
         }
 

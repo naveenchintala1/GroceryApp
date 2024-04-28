@@ -1,11 +1,11 @@
-package com.chefmate.ui.chefmate_database
+package com.groceryapp.ui.grocery_database
 
 import android.content.Context
 import android.content.SharedPreferences
 
-class ChefmateDatabase(context: Context) {
+class GroceryDatabase(context: Context) {
     private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences("chefmate_database", Context.MODE_PRIVATE)
+        context.getSharedPreferences("grocery_database", Context.MODE_PRIVATE)
 
     fun saveData(key: String, value: Boolean) {
         val editor = sharedPreferences.edit()

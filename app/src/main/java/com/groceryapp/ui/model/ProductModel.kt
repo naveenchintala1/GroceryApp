@@ -1,3 +1,3 @@
 package com.groceryapp.ui.model
 
-class ProductModel(var id:String="",var image:String="",var name:String="",var price:String="",var isLiked:Boolean = false)
+class ProductModel(var detail:String="",var id:String="",var image:Int=0,var name:String="",var price:Int=0,var isLiked:Boolean = false)
